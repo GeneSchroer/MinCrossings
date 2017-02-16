@@ -1,5 +1,7 @@
 import itertools
 import math
+import collections
+
 """
 an edge on the Graph, connects two Nodes, connects two layers
 """
@@ -23,10 +25,11 @@ def permWrapper(g=Graph()):
 	permutate(g, 400000)
 
 def permutate(g=Graph(), minimum = 4000):
+	crossings = 0
 	graph = g.graph
 	edges = g.edges
-	for edge in edges:
-		print(str(edge.low_node) + " " + str(edge.high_node))
+	#for edge in edges:
+	#	print(str(edge.low_node) + " " + str(edge.high_node))
 	permutation_list= []
 	for layer in graph:
 	#	print(layer)
@@ -37,15 +40,43 @@ def permutate(g=Graph(), minimum = 4000):
 #	print((permutation_list))
 		
 	permutated_graph = list(itertools.product(*permutation_list))
-#	print("1 " + str(permutated_graph[0]))
-#	print ((permutated_graph))
-	for i in range(0, len(permutated_graph)):
-		graph = permutated_graph[i]
-		crossings = compute(graph, edge)
+	permutated_graph = upgradeGraph(permutated_graph)
+	for perm in permutated_graph:
+		crossings = compute(perm, edges)
 		if (crossings < minimum):
 			minimum = crossings
-			print(minimum)
+			print (perm)
+			print (minimum)
 
+			
+
+#	print("2 " + str(permutated_graph[2][0]))
+	#print (permutated_graph[2][0].keys())
+
+
+#	print((permutated_graph))
+def upgradeGraph(permutated_graph):
+	for i in range(0, len(permutated_graph)):	
+		perm = list(permutated_graph[i])
+		for j in range(0, len(perm)):
+			perm[j] = list(perm[j])
+			#perm[j] = collections.\
+			#	OrderedDict( (l,-1) for l in\
+			#	 list(perm[j]) )
+			#index = 0
+			#for k in perm[j]:
+			#	k = index
+			#	index += 1
+		permutated_graph[i] = perm
+	#	permutated_graph[i] = dict( (j,k) for j in range(0, len(perm)) for k in perm)
+	print(permutated_graph[0])
+#	print(permutated_graph[0][0][1])
+	#print(permutated_graph[0])
+	#crossings = compute(graph, edge)
+	#if (crossings < minimum):
+	#	minimum = crossings
+	#	print(minimum)
+	return permutated_graph
 def groupEdges(edge_list = []):
 	grouped_edges = {}
 	current = -1
@@ -62,6 +93,7 @@ def groupEdges(edge_list = []):
 #		for e in grouped_edges[edge]:
 #			print(e.low_node)
 #		print()
+	return grouped_edges
 """
 Parse file into Nodes, Edges, and a Graph
 """
@@ -96,13 +128,15 @@ def fillGraph(codes = None):
 		#	node = Node()
 			for i in range(0, count):
 				graph[layer].append(-1)
+			
 			index = 0
 		elif (command == "in_layer"):
 			layer = int(command_list[0])
 			node = int(command_list[1].split("n")[1])
 	#		print (node.number)
 	#		print (node.position)
-			graph[layer][index]=node
+			graph[layer][index] = node
+			#print(graph[layer].keys())
 			index += 1
 		elif (command == "edge"):
 			low_node = int(command_list[0].split("n")[1])
@@ -119,40 +153,10 @@ def fillGraph(codes = None):
 	#for edge in edge_list:
 	#	print (edge.low_node + " " + edge.high_node)
 	ret = Graph(graph, edge_list)
+	#print(ret.edges)
 	return ret
-"""
-	edges = g.edges
-	layer_list = graph[layer] # list of the current layer
-	top_level = len(graph)-1
-	count = len(layer_list)
-	i = 0	
-	j = count - 1
-	if (layer == top_level):
-		# begin computing
-		for k in range(0, math.factorial(count)):
-			crossings = compute(g)
-			if(crossings < minimum):
-				#printGraph(graph)
-				minimum = crossings
-				print(minimum)
-			#swap nodes in the list
-			layer_list = swap(layer_list, i, j)
-			#also swap edges?
-			g.graph[layer] = layer_list
-			i = (i + 1) % count	
-			j = (j + 1) % count
-	else:
-		for k in range(0, math.factorial(count)):
-			crossings = permutate(g, layer+1, minimum)
-			if (crossings < minimum):
-				minimum = crossings
-			layer_list = swap(layer_list, i, j)
-			g.graph[layer] = layer_list
-			i = (i + 1) % count
-			j = (j + 1) % count
-	return minimum
 
-"""
+
 def sortEdges(edge_list=[], nodes = 0):
 	if(edge_list ==[]):
 		return edge_list
@@ -208,37 +212,72 @@ Add all the edges to the Graph and return the number of crossings
 Return: The minimum number of crossings
 """
 def compute(graph, edges):
+	#print(edges)
 	crossings = 0
-	edge_list = []	
-	for current in edges:
-		for i in edge_list:
-			if(current.low_layer == i.low_layer):
-				current_high = getPosition(graph, \
-						current.high_layer, \
-						current.high_node)
-		#		print (current.high_layer)
-		#		print (current.high_node)
-				#print(current_high)	
-				current_low = getPosition(graph, \
-						current.low_layer, \
-						current.low_node)
-				#print(current_low)
-				i_high = getPosition(graph, \
-						i.high_layer, \
-						i.high_node)
-				#print(i_high)
-				i_low = getPosition(graph, \
-						i.low_layer,
-						i.low_node)
-				#print(i_low)
-				if( (current_high > i_high \
-				    and current_low < i_low)\
-				    or \
-				    (current_high < i_high \
-				    and current_low > i_low)):
-					crossings+= 1
-		edge_list.append(current)
-		
+	for i in range (0, len(graph)-1):
+		for j in range(0,len(graph[i])):
+			current_node = graph[i][j]
+			if (current_node not in edges):
+				continue
+			else:
+				current_edges = edges[current_node]
+				#print (edges)
+				for k in range(j+1, len(graph[i])):
+					trav_node = graph[i][k]
+					if (trav_node not in edges):
+						continue
+					else:
+						trav_edges = edges[trav_node]
+						crossings += getCrossings\
+						(graph, current_edges,\
+						 trav_edges)
+	return crossings
+def getCrossings(graph, n, m):
+	crossings = 0
+	for cur in n:
+		for trav in m:
+			cur_pos = getPosition1(graph, \
+						cur.high_layer,cur.high_node)
+			trav_pos = getPosition1(graph, \
+						trav.high_layer, trav.high_node)			
+			if (cur_pos > trav_pos):
+				#print(graph)
+				#print(cur_pos, cur.low_node, cur.high_node)
+				#print(trav_pos,trav.low_node, trav.high_node)
+				crossings += 1
+
 
 	return crossings
+
+def getPosition1(graph, layer = -1, node = -1):
+	if (layer == -1 or node == None):
+		return None
+	layer_list = graph[layer]
+	for i in range(0, len(layer_list)):
+		if (layer_list[i] == node):
+			return i
+	print(-1)
+	return -1
+
+
+def getPosition(graph, layer = -1,   node = -1):
+	if (layer == -1 or node == None):
+		return None
+	layer_list = graph[layer]
+	lo = 0
+	hi = len(layer_list)-1
+
+	while (hi>lo):
+		lo = 0
+		hi = len(layer_list)-1
+		mid = math.floor( (hi-lo)/2)
+		#print(mid)
+		if (layer_list[mid].number == node):
+			return layer_list[mid].position
+		elif(layer_list[mid].number < node):
+			layer_list = layer_list[mid+1:len(layer_list)]
+		else:
+			layer_list = layer_list[0:mid]
+	return -1
+
 
