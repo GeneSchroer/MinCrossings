@@ -1,7 +1,9 @@
 import itertools
 import math
 import collections
-
+import sys
+import copy
+#global minimum
 """
 an edge on the Graph, connects two Nodes, connects two layers
 """
@@ -22,8 +24,84 @@ class Graph:
 
 
 def permWrapper(g=Graph()):
-	permutate(g, 400000)
+	#return permutate(g)
+	graph = g.graph
+	edges = g.edges
+	return permutate2(graph, edges,0)
 
+def permutate2(graph, edges, layer=-1):
+	global minimum
+	global total
+	perm = copy.deepcopy(graph)
+
+	if(layer == -1):
+		return -1
+	#layer_list = perm[layer] # list of the current layer
+	top_level = len(perm)-1
+#	print(top_level)
+	count = len(perm[layer])
+	i = 0	
+	j = count - 1
+	b = False
+	# begin computing
+	#print(math.factorial(count))p
+	p = list(itertools.permutations(perm[layer]))
+	for k in range(0, math.factorial(count)):
+		perm[layer] = p[k]	
+		if (layer == top_level):
+			crossings = compute(perm, edges)
+			
+		#	if(b==True):
+		#		continue
+			if (crossings < minimum):
+				minimum = crossings
+				print (perm)
+				print (minimum)
+#			if(perm[0][0] ==5 and perm[0][1]==2\
+#				and perm[0][2]==3\
+#				and perm[0][3]==4\
+#				and perm[0][4]==1\
+#				and perm[1][0]==11\
+#				and perm[1][1]==15\
+#				and perm[1][2]==13\
+#				and perm[1][3]==14\
+#				and perm[1][4]==12):
+#					print(k, perm, crossings, minimum)	
+		#		if(crossings ==6):
+		#		b = True
+				#printGraph(graph)
+		#		print(graph)
+		#		print(minimum)
+		#		return
+	#		perm[layer] = swap(perm[layer],i,j)
+		#	print(k,perm)
+		#	print(k,graph)
+			total += 1		
+			#print(k,graph,crossings,minimum)	
+		else:
+		#	if(minimum == 6):
+		#		return
+			permutate2(perm, edges, layer+1)
+	#		perm[layer] = swap(perm[layer], i, j)
+			#if(layer == 1):
+			#	print(k, graph, minimum)
+			#if(crossings < minimum):
+			#	minimum = crossings
+		
+	#	if(crossings == 5):
+	#		print (crossings)
+	#	i = (i + 1) % count	
+	#	j = (j + 1) % count
+
+
+def swap(array = None, left = -1, right = -1):
+	if (array ==None or left == -1 or right == -1):
+		print("None")
+		return array
+	temp = array[left]
+	array[left] = array[right]
+	array[right] = temp
+	return array
 def permutate(g=Graph(), minimum = 4000):
 	crossings = 0
 	graph = g.graph
@@ -33,14 +111,16 @@ def permutate(g=Graph(), minimum = 4000):
 	permutation_list= []
 	for layer in graph:
 	#	print(layer)
-		p = list(itertools.permutations(layer))
+		
 	#	print(list(p))
 		permutation_list.append( p)
 
 #	print((permutation_list))
-		
-	permutated_graph = list(itertools.product(*permutation_list))
-	permutated_graph = upgradeGraph(permutated_graph)
+	
+
+	
+	#permutated_graph = list(itertools.product(*permutation_list))
+	#permutated_graph = upgradeGraph(permutated_graph)
 	for perm in permutated_graph:
 		crossings = compute(perm, edges)
 		if (crossings < minimum):
@@ -231,6 +311,8 @@ def compute(graph, edges):
 						crossings += getCrossings\
 						(graph, current_edges,\
 						 trav_edges)
+					if(crossings >=minimum):
+						return crossings
 	return crossings
 def getCrossings(graph, n, m):
 	crossings = 0
@@ -279,5 +361,23 @@ def getPosition(graph, layer = -1,   node = -1):
 		else:
 			layer_list = layer_list[0:mid]
 	return -1
+global minimum
+global total
+minimum = 4096
+total = 0
+if(len(sys.argv) != 2):
+	print("Usage: python3 hw2.py FILE")
+else:
+	stream = open(sys.argv[1], "r")
+	# Parse file into a list
+	
+	graph_codes = parseFile(stream)
+
+	ret = fillGraph(graph_codes)
+	graph = ret.graph
+	edges = ret.edges
 
 
+	minimum = permWrapper(ret)
+	print (minimum)
+	print (total)
